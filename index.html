@@ -1,0 +1,244 @@
+<html>
+<head>
+  <title>Игра, Заготовка</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta http-equiv="content-language" content="ru">
+
+	<script src="js/ajax.js" type="text/javascript"></script>
+	<script src="js/world.js" type="text/javascript"></script>
+	<script src="js/world.subclass.js" type="text/javascript"></script>
+	<script src="js/world.loader.js" type="text/javascript"></script>
+	<script src="js/world.generators.js" type="text/javascript"></script>
+	<script src="js/world.calculators.js" type="text/javascript"></script>
+
+	<script src="js/functions.js" type="text/javascript"></script>
+	<script src="tables/tiles.js" type="text/javascript"></script>
+ 
+  <script src="js/game.init.js" type="text/javascript"></script>
+
+  <script src="js/game.screen.js" type="text/javascript"></script>
+  <script src="js/game.map.js" type="text/javascript"></script>
+  <script src="js/game.ui.js" type="text/javascript"></script>
+
+	<script src="js/threeR53.min.js" type="text/javascript"></script>
+	<script src="js/three.test.js" type="text/javascript"></script>
+	<!--script src="js/three.min.js" type="text/javascript"></script-->
+	<!--script src="js/BlendCharacter.js"></script-->
+	<!--script src="js/three.test.69.js" type="text/javascript"></script-->
+
+  <!--script src="http://alexpotapov.net/generator.js" type="text/javascript"></script-->
+
+  
+  
+  <script type="text/javascript">
+  var world = {};
+  var map_str = '';
+
+  var count_fps = 0;
+  var loops_fps = 100;
+  var time_fps_end = 0;
+  var time_fps_start = 0;
+
+  function onLoad() {
+		  geometryInit();
+      screenInit();
+      showMan();
+      world = new WORLD();
+      //world.loader.openWORLD('http://80.237.22.134/lastuniverse.github.io/worlds/world.00.js', startWorld );
+      //world.loader.openWORLD('http://lastuniverse.github.io/worlds/world.00.js', startWorld );
+      world.loader.openWORLD('worlds/world.00.js', startWorld );
+  }
+
+
+  function startWorld() {
+      //world.loader.resetWORLD({});
+      //world.loader.recalcWORLD();
+      //world.generators.all();
+      worldRestore();
+      gameDraw();
+ 	}
+
+
+
+  function resetWorld() {
+      world.loader.resetWORLD({});
+      worldInit();
+      world.loader.recalcWORLD();
+      worldRestore();
+      world.generators.all();
+  }
+
+
+  function testFPSloops() {
+      count_fps++;
+      //showScreen(gscreen.ox,gscreen.oy);
+      screenShow(gscreen.ox - count_fps, gscreen.oy);
+      if (count_fps < loops_fps) {
+          setTimeout(testFPSloops, 0);
+      } else {
+          var me = new Date();
+          time_fps_end = me.getTime();
+          say("Завершена проверка скорости отрисовки игрового поля через setTimeout.\nотрисованно кадров: [" + loops_fps + "]\nзатрачено времени: [" + (time_fps_end - time_fps_start) + "]");
+          count_fps = 0;
+      }
+  }
+
+  function testFPS() {
+
+      var ms = new Date();
+      time_fps_start = ms.getTime();
+      setTimeout(testFPSloops, 10);
+  }
+
+  function testFPSwhile() {
+      var ms = new Date();
+      time_fps_start = ms.getTime();
+      for (var i = 0; i < loops_fps; i++) {
+          //showScreen(gscreen.ox,gscreen.oy);
+          screenShow(gscreen.ox, gscreen.oy);
+      }
+      var me = new Date();
+      time_fps_end = me.getTime();
+      say("Завершена проверка скорости отрисовки игрового поля  в цикле.\nотрисованно кадров: [" + loops_fps + "]\nзатрачено времени: [" + (time_fps_end - time_fps_start) + "]");
+  }
+
+  </script>
+  
+  <link rel="stylesheet" type="text/css" href="css/game.css">
+</head>
+<body onload="onLoad()">
+
+
+	<!--div id="test_div" class="test_div">
+<script type="text/javascript">//<![CDATA[
+(function(w,n,d,r,s){d.write('<a href="http://top.mail.ru/jump?from=2301119" target="_top">'+
+'<img src="http://dc.c1.b3.a2.top.mail.ru/counter?id=2301119;t=50;js=13'+
+((r=d.referrer)?';r='+escape(r):'')+((s=w.screen)?';s='+s.width+'*'+s.height:'')+';_='+Math.random()+
+'" border="0" height="31" width="88" alt="Рейтинг@Mail.ru"><\/a>');})(window,navigator,document);//]]>
+</script><noscript><a target="_top" href="http://top.mail.ru/jump?from=2301119">
+<img src="http://dc.c1.b3.a2.top.mail.ru/counter?id=2301119;t=50;js=na"
+border="0" height="31" width="88" alt="Рейтинг@Mail.ru"></a></noscript>
+	</div-->
+	
+	<div id="game_container"><canvas id="game_canvas" class="game_canvas"></canvas></div>
+	<div id="game_rose" class="game_rose"></div>
+	<div id="game_shadow" class="game_shadow" onmouseup="show_screen(event)"></div>
+	<div id="map_container" class="map_container"><canvas id="map_canvas" class="map_canvas" onmouseup="zoom(event)"></canvas></div>
+	<div id="map_rose" class="map_rose"></div>
+	<div id="edit_container" class="edit_container">
+
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(1);" id="block1_swch">[+]</a>&nbsp;
+			параметры мира (требуется новая генерация)
+		</legend>
+		<div id="block1" style="display : none;">
+			<label><input type="text"  class="text" value="0" name="degree" id="degree">(degree) Умножитель. Влияет на размер мира</label><br>
+			<label><input type="text"  class="text" value="0" name="base" id="base" disabled>>(base) База. размер базового сектора в метрах (base=2^degree)</label><br>
+			<label><input type="text"  class="text" value="0" name="width" id="width" disabled>>(width) Ширина мира в метрах. (width=base*2)</label><br>
+			<label><input type="text"  class="text" value="0" name="height" id="height" disabled>>(height) Высота мира в метрах. (height=base)</label><br>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(2);" id="block2_swch">[+]</a>&nbsp;
+			параметры генератора (требуется новая генерация)
+		</legend>
+		<div id="block2" style="display : none;">
+			<label><input type="text"  class="text" value="0" name="loops" id="loops">(loops) Количество вложенных циклов разбиения на сектора. (1-7)</label><br>
+			<label><input type="text"  class="text" value="0" name="numbers" id="numbers">(numbers) Количество элементов в секторе.(1-20)</label><br>
+			<label><input type="text"  class="text" value="0" name="divider" id="divider">(divider) Делитель. Изменяет размер элемента (size=base/(2^divider))</label><br>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(3);" id="block3_swch">[+]</a>&nbsp;
+			параметры отображения игрового поля
+		</legend>
+		<div id="block3" style="display : none;">
+			<label><input type="range" min="0" max="100" step="1" value="0" id='opacity' onchange="opacity()">Затемнение. (0-100)</label><br>
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(4);" id="block4_swch">[+]</a>&nbsp;
+			параметры отображения географии
+		</legend>
+		<div id="block4" style="display : none;">
+			<label><input type="text"  class="text" value="0" name="waterlevel" id="waterlevel">(waterlevel) Уровень воды. (0-65535)</label><br>
+			<label><input type="text"  class="text" value="0" name="sandlevel" id="sandlevel">(sandlevel) Уровень песка у воды. (0-65535)</label><br>
+			<label><input type="text"  class="text" value="0" name="stounlevel" id="stounlevel">(stounlevel) Уровень выше которого растительности нет. (0-65535)</label><br>
+			<label><input type="text"  class="text" value="0" name="icelevel" id="icelevel">(icelevel) Уровень оледенения гор. (0-65535)</label><br>
+			<label><input type="text"  class="text" value="0" name="hdivider" id="hdivider">(hdivider) Делитель высоты. Изменяет высоту рельефа (height=height/(2^divider))</label><br>
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(5);" id="block5_swch">[+]</a>&nbsp;
+			параметры отображения температур
+		</legend>
+		<div id="block5" style="display : none;">
+			<label><input type="text"  class="text" value="0" name="day" id="day">(day) День в году. Влияет на температуру. (0-365)</label><br>
+			<label><input type="text"  class="text" value="0" name="thdivider" id="thdivider">(thdivider) температурный коэффициент для суши. (0-20)</label><br>
+			<label><input type="text"  class="text" value="0" name="tddivider" id="tddivider">(tddivider) температурный коэффициент для океана. (0-20)</label><br>
+		</div>
+	</fieldset>
+	<fieldset>
+		<legend>
+			&nbsp;<a href="#" OnClick="return swch(6);" id="block6_swch">[+]</a>&nbsp;
+			выбор слоев отображения
+		</legend>
+		<div id="block6" style="display : none;">
+			<label>
+				<input type="text" class="text" value="0" name="a_map_check" id="a_map_check"> прозрачность (0-255)
+				<input type="checkbox" name="map_check" id="map_check"> отображать географическую карту.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_addsh_check" id="a_addsh_check"> прозрачность (0-255)
+				<input type="checkbox" name="addsh_check" id="addsh_check"> отображать места наложения высот.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_sun_check" id="a_sun_check"> прозрачность (0-255)
+				<input type="checkbox" name="sun_check" id="sun_check"> отображать освещенность солнцем.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_temp_check" id="a_temp_check"> прозрачность (0-255)
+				<input type="checkbox" name="temp_check" id="temp_check"> отображать карту температур.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_press_check" id="a_press_check"> прозрачность (0-255)
+				<input type="checkbox" name="press_check" id="press_check"> отображать карту давлений.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_ice_check" id="a_ice_check"> прозрачность (0-255)
+				<input type="checkbox" name="ice_check" id="ice_check"> отображать карту оледенения.
+			</label><br>
+			<label>
+				<input type="text" class="text" value="0" name="a_seasons_check" id="a_seasons_check"> прозрачность (0-255)
+				<input type="checkbox" name="seasons_check" id="seasons_check"> отображать карту сезонов.
+			</label><br>
+		</div>
+	</fieldset>
+	
+	<input type='button' value='Отобразить карту' onClick="showMap(0,0,0)">
+	<input type='button' value='Новая генерация таблиц' onClick="resetWorld();">
+	<input type='button' value='Отобразить таблицы' onClick="world.loader.showWorldTables('edit_textarea')">
+	<input type='button' value='тест FPS (через setTimeout) код в index.html' onClick="testFPS()">
+	<input type='button' value='тест FPS (через цикл) код в index.html' onClick="testFPSwhile()">
+	<input type='button' value='тест алгоритмов (преобразование координат)' onClick="showTest()">
+	
+	
+	<!--input type='button' value='сгенерировать карту высот' onClick="height_map_create()"-->
+	<!--input type='button' value='сгенерировать карту температур' onClick="temperature_map_create(world.maps.opts.day)"-->
+	<!--input type='button' value='Слишком однообразный вариант' onClick="callVariant(1)"><br-->
+  </div>
+    <div id="console_container"><textarea id="edit_textarea" class="edit_textarea"></textarea></div>
+</body>
+</html>
